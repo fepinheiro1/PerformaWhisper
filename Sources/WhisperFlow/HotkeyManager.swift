@@ -23,6 +23,7 @@ final class HotkeyManager {
         case .rightOption: return CGKeyCode(kVK_RightOption)
         case .rightCommand: return CGKeyCode(kVK_RightCommand)
         case .fn: return CGKeyCode(kVK_Function)
+        case .controlOption: return 0 // combo: evaluated by flags, not key code
         }
     }
 
@@ -31,7 +32,21 @@ final class HotkeyManager {
         case .rightOption: return .maskAlternate
         case .rightCommand: return .maskCommand
         case .fn: return .maskSecondaryFn
+        case .controlOption: return [.maskControl, .maskAlternate]
         }
+    }
+
+    /// Whether `key` is currently pressed according to this flagsChanged event.
+    /// Returns nil when the event is unrelated to `key` (single keys react only
+    /// to their own key code; combos are re-evaluated on every flags change).
+    private static func pressedState(for key: HoldKey, event: CGEvent) -> Bool? {
+        if key.isCombo {
+            let mask = flagMask(for: key)
+            return event.flags.intersection(mask) == mask
+        }
+        let keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
+        guard keyCode == Self.keyCode(for: key) else { return nil }
+        return event.flags.contains(flagMask(for: key))
     }
 
     func start() {
@@ -87,26 +102,20 @@ final class HotkeyManager {
         }
 
         guard type == .flagsChanged else { return }
-        let keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
 
         let dictKey = Preferences.shared.holdKey
         let cmdKey = Preferences.shared.commandModeKey
 
-        if keyCode == Self.keyCode(for: dictKey) {
-            let pressed = event.flags.contains(Self.flagMask(for: dictKey))
-            if pressed != dictationHeld {
-                dictationHeld = pressed
-                DispatchQueue.main.async {
-                    pressed ? self.onDictationDown?() : self.onDictationUp?()
-                }
+        if let pressed = Self.pressedState(for: dictKey, event: event), pressed != dictationHeld {
+            dictationHeld = pressed
+            DispatchQueue.main.async {
+                pressed ? self.onDictationDown?() : self.onDictationUp?()
             }
-        } else if keyCode == Self.keyCode(for: cmdKey) {
-            let pressed = event.flags.contains(Self.flagMask(for: cmdKey))
-            if pressed != commandHeld {
-                commandHeld = pressed
-                DispatchQueue.main.async {
-                    pressed ? self.onCommandDown?() : self.onCommandUp?()
-                }
+        }
+        if let pressed = Self.pressedState(for: cmdKey, event: event), pressed != commandHeld {
+            commandHeld = pressed
+            DispatchQueue.main.async {
+                pressed ? self.onCommandDown?() : self.onCommandUp?()
             }
         }
     }

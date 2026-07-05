@@ -4,6 +4,7 @@ enum HoldKey: String, CaseIterable, Identifiable, Codable {
     case rightOption
     case rightCommand
     case fn
+    case controlOption
 
     var id: String { rawValue }
 
@@ -12,8 +13,12 @@ enum HoldKey: String, CaseIterable, Identifiable, Codable {
         case .rightOption: return "⌥ Option direita (segurar)"
         case .rightCommand: return "⌘ Command direita (segurar)"
         case .fn: return "🌐 Fn (segurar)"
+        case .controlOption: return "⌃⌥ Control + Option (segurar)"
         }
     }
+
+    /// Combo keys are evaluated by modifier flags instead of a single key code.
+    var isCombo: Bool { self == .controlOption }
 }
 
 enum ToneStyle: String, CaseIterable, Identifiable, Codable {
