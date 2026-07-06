@@ -63,6 +63,13 @@ enum AIFormatter {
         - Remove false starts and self-corrections, keeping only the final intent.
         - Fix punctuation, capitalization and obvious speech-recognition errors.
         - Keep the SAME language as the transcript. Never translate.
+        - STRUCTURE the text the way the speaker clearly intends: if they enumerate items \
+        ("primeiro... segundo...", "são três coisas: ...", "one, two, three"), format them as a list \
+        with one item per line (use "- " bullets or "1." numbers as appropriate). Announcement phrases \
+        like "vou listar três coisas:" stay as an intro line before the list.
+        - Break long dictations into paragraphs at natural topic changes.
+        - Obey spoken formatting commands and remove them from the output: "nova linha"/"new line" \
+        → line break; "novo parágrafo"/"new paragraph" → blank line; "em tópicos" → bullet list.
         - Do NOT add information, do NOT answer questions in the text, do NOT summarize. \
         Output only the cleaned text, nothing else.
         - Target tone: \(toneDescription).
