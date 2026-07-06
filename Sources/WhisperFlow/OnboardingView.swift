@@ -44,7 +44,7 @@ struct OnboardingView: View {
             }
             .padding(.horizontal)
 
-            Text("Depois de conceder, segure ⌥ Option direita e fale. Solte para inserir o texto.")
+            Text("Depois de conceder, segure ⌃ Control + ⌥ Option e fale. Solte para inserir o texto.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 

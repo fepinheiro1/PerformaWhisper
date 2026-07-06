@@ -48,7 +48,7 @@ final class Preferences {
     private init() {}
 
     var holdKey: HoldKey {
-        get { HoldKey(rawValue: d.string(forKey: "holdKey") ?? "") ?? .rightOption }
+        get { HoldKey(rawValue: d.string(forKey: "holdKey") ?? "") ?? .controlOption }
         set { d.set(newValue.rawValue, forKey: "holdKey") }
     }
 
