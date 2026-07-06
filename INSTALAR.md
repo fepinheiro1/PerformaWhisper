@@ -7,9 +7,13 @@ localmente no seu Mac** (nada de áudio indo para a nuvem).
 ## Requisitos
 
 - macOS 14 (Sonoma) ou mais novo
-- Mac com chip Apple (M1/M2/M3/M4) — recomendado
-- Internet só na primeira execução (para baixar o modelo de voz, ~460 MB) e,
+- Funciona em Macs com chip Apple (M1/M2/M3/M4) **e** em Macs Intel
+- Internet só na primeira execução (para baixar o modelo de voz) e,
   opcionalmente, para a formatação com IA
+
+> **Mac Intel?** Funciona, mas a transcrição é mais lenta (o chip não tem o motor
+> neural dos Macs M). Dica: em **Configurações → Geral → Modelo de voz**, escolha
+> **Base** ou **Tiny** — ficam bem mais rápidos e ainda têm boa qualidade.
 
 ## Instalação (5 minutos)
 
