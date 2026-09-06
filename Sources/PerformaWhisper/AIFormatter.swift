@@ -17,7 +17,7 @@ enum AIFormatter {
                     user: raw
                 )
             } catch {
-                NSLog("WhisperFlow: OpenAI falhou (\(error.localizedDescription)); usando limpeza por regras")
+                NSLog("PerformaWhisper: OpenAI falhou (\(error.localizedDescription)); usando limpeza por regras")
                 cleaned = ruleBasedCleanup(raw)
             }
         } else {
@@ -32,7 +32,7 @@ enum AIFormatter {
     /// Command Mode: applies a spoken instruction to the selected text.
     static func applyCommand(instruction: String, to selectedText: String) async throws -> String {
         guard !Preferences.shared.openAIKey.isEmpty else {
-            throw NSError(domain: "WhisperFlow", code: 3, userInfo: [
+            throw NSError(domain: "PerformaWhisper", code: 3, userInfo: [
                 NSLocalizedDescriptionKey: "Command Mode requer uma chave da OpenAI nas configurações"
             ])
         }
@@ -110,7 +110,7 @@ enum AIFormatter {
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
             let msg = String(data: data, encoding: .utf8) ?? "erro desconhecido"
-            throw NSError(domain: "WhisperFlow", code: 4,
+            throw NSError(domain: "PerformaWhisper", code: 4,
                           userInfo: [NSLocalizedDescriptionKey: "OpenAI: \(msg.prefix(200))"])
         }
         struct Response: Decodable {
@@ -122,7 +122,7 @@ enum AIFormatter {
         }
         let decoded = try JSONDecoder().decode(Response.self, from: data)
         guard let content = decoded.choices.first?.message.content else {
-            throw NSError(domain: "WhisperFlow", code: 5,
+            throw NSError(domain: "PerformaWhisper", code: 5,
                           userInfo: [NSLocalizedDescriptionKey: "Resposta vazia da OpenAI"])
         }
         return content.trimmingCharacters(in: .whitespacesAndNewlines)

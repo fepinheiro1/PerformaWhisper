@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "WhisperFlow",
+    name: "PerformaWhisper",
     platforms: [
         .macOS(.v13)
     ],
@@ -11,11 +11,11 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "WhisperFlow",
+            name: "PerformaWhisper",
             dependencies: [
                 .product(name: "WhisperKit", package: "WhisperKit")
             ],
-            path: "Sources/WhisperFlow"
+            path: "Sources/PerformaWhisper"
         )
     ]
 )

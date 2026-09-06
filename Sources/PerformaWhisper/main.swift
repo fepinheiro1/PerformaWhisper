@@ -2,7 +2,7 @@ import AppKit
 import WhisperKit
 
 // CLI test mode: transcribe a wav file end to end without launching the UI.
-// Usage: WhisperFlow --test-transcribe /path/audio.wav
+// Usage: PerformaWhisper --test-transcribe /path/audio.wav
 if let idx = CommandLine.arguments.firstIndex(of: "--test-transcribe"),
    CommandLine.arguments.count > idx + 1 {
     let path = CommandLine.arguments[idx + 1]

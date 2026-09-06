@@ -1,4 +1,4 @@
-# WhisperFlow
+# PerformaWhisper
 
 Ditado por voz com IA para macOS — inspirado no [Wispr Flow](https://wisprflow.ai), mas com
 **transcrição 100% local e privada** (WhisperKit/CoreML rodando no chip do seu Mac).
@@ -33,7 +33,7 @@ O texto selecionado é substituído pelo resultado. (Requer chave da OpenAI.)
 
 ```sh
 swift build            # debug
-./make-app.sh          # gera build/WhisperFlow.app (release, assinado ad-hoc)
+./make-app.sh          # gera build/PerformaWhisper.app (release, assinado ad-hoc)
 ```
 
 Requisitos: macOS 13+, Apple Silicon recomendado, Swift 5.9+ (Command Line Tools bastam).
@@ -49,5 +49,5 @@ O onboarding do app guia as duas permissões na primeira execução.
 ## Testes de linha de comando
 
 ```sh
-.build/debug/WhisperFlow --test-transcribe audio.wav   # transcreve um arquivo wav
+.build/debug/PerformaWhisper --test-transcribe audio.wav   # transcreve um arquivo wav
 ```

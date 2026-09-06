@@ -87,7 +87,7 @@ final class Transcriber {
                                     load: true,
                                     download: false)
         } catch {
-            NSLog("WhisperFlow: download explícito falhou (\(error.localizedDescription)); deixando o WhisperKit resolver")
+            NSLog("PerformaWhisper: download explícito falhou (\(error.localizedDescription)); deixando o WhisperKit resolver")
             setState(.loading)
             return WhisperKitConfig(model: model,
                                     verbose: false,
@@ -126,7 +126,7 @@ final class Transcriber {
     /// Transcribes 16 kHz mono samples. Returns the raw transcript.
     func transcribe(samples: [Float]) async throws -> String {
         guard let kit = withLock({ _whisperKit }) else {
-            throw NSError(domain: "WhisperFlow", code: 2,
+            throw NSError(domain: "PerformaWhisper", code: 2,
                           userInfo: [NSLocalizedDescriptionKey: "Modelo ainda não carregado"])
         }
         // Whisper needs at least ~1s of audio to behave; pad short clips with silence.

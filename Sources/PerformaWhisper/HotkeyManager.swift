@@ -77,7 +77,7 @@ final class HotkeyManager {
             userInfo: refcon
         )
         guard let tap else {
-            NSLog("WhisperFlow: falha ao criar event tap (sem permissão de Acessibilidade?)")
+            NSLog("PerformaWhisper: falha ao criar event tap (sem permissão de Acessibilidade?)")
             return
         }
         runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)

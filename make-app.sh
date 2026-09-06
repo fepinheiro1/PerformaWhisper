@@ -1,16 +1,16 @@
 #!/bin/zsh
-# Builds WhisperFlow.app from the SwiftPM release build.
+# Builds PerformaWhisper.app from the SwiftPM release build.
 set -e
 cd "$(dirname "$0")"
 
 echo "→ Compilando (release)…"
 swift build -c release
 
-APP="build/WhisperFlow.app"
+APP="build/PerformaWhisper.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp .build/release/WhisperFlow "$APP/Contents/MacOS/WhisperFlow"
+cp .build/release/PerformaWhisper "$APP/Contents/MacOS/PerformaWhisper"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -18,13 +18,13 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>WhisperFlow</string>
+    <string>PerformaWhisper</string>
     <key>CFBundleIdentifier</key>
-    <string>com.pinheiro.whisperflow</string>
+    <string>com.pinheiro.performawhisper</string>
     <key>CFBundleName</key>
-    <string>WhisperFlow</string>
+    <string>PerformaWhisper</string>
     <key>CFBundleDisplayName</key>
-    <string>WhisperFlow</string>
+    <string>PerformaWhisper</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -36,7 +36,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>LSUIElement</key>
     <true/>
     <key>NSMicrophoneUsageDescription</key>
-    <string>O WhisperFlow usa o microfone para transcrever sua voz localmente.</string>
+    <string>O PerformaWhisper usa o microfone para transcrever sua voz localmente.</string>
     <key>NSHighResolutionCapable</key>
     <true/>
 </dict>

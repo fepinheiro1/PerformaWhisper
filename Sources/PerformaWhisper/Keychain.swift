@@ -4,7 +4,7 @@ import Security
 /// Minimal Keychain wrapper for secrets that must not sit in UserDefaults
 /// (which lands in a plist readable by any process running as the user).
 enum Keychain {
-    private static let service = "com.pinheiro.whisperflow"
+    private static let service = "com.pinheiro.performawhisper"
 
     static func read(_ account: String) -> String? {
         let query: [String: Any] = [
@@ -43,7 +43,7 @@ enum Keychain {
             let merged = query.merging(attributes) { _, new in new }
             return SecItemAdd(merged as CFDictionary, nil) == errSecSuccess
         }
-        NSLog("WhisperFlow: falha ao gravar no Keychain (status \(status))")
+        NSLog("PerformaWhisper: falha ao gravar no Keychain (status \(status))")
         return false
     }
 

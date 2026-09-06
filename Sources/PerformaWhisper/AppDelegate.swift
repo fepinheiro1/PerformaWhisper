@@ -29,7 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "WhisperFlow")
+            button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "PerformaWhisper")
         }
 
         let menu = NSMenu()
@@ -52,7 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Quit keeps a nil target on purpose: with an explicit target the menu
         // validates against an object that does not respond to terminate(_:) and
         // disables the item. Leaving it nil sends it up the responder chain to NSApp.
-        menu.addItem(NSMenuItem(title: "Sair do WhisperFlow",
+        menu.addItem(NSMenuItem(title: "Sair do PerformaWhisper",
                                 action: #selector(NSApplication.terminate(_:)),
                                 keyEquivalent: "q"))
         statusItem.menu = menu
@@ -77,7 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 Task { @MainActor in self?.controller.reloadModel() }
             })
             let window = NSWindow(contentViewController: NSHostingController(rootView: view))
-            window.title = "WhisperFlow — Configurações"
+            window.title = "PerformaWhisper — Configurações"
             window.styleMask = [.titled, .closable]
             window.isReleasedWhenClosed = false
             settingsWindow = window
@@ -97,7 +97,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         })
         let window = NSWindow(contentViewController: NSHostingController(rootView: view))
-        window.title = "WhisperFlow"
+        window.title = "PerformaWhisper"
         window.styleMask = [.titled, .closable]
         window.isReleasedWhenClosed = false
         onboardingWindow = window

@@ -25,7 +25,7 @@ final class AudioRecorder {
         let input = engine.inputNode
         let inputFormat = input.outputFormat(forBus: 0)
         guard inputFormat.sampleRate > 0 else {
-            throw NSError(domain: "WhisperFlow", code: 1,
+            throw NSError(domain: "PerformaWhisper", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "Microfone indisponível"])
         }
 

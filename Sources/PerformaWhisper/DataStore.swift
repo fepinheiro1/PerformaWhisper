@@ -33,7 +33,7 @@ final class DataStore: ObservableObject {
 
     private static var dir: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let dir = base.appendingPathComponent("WhisperFlow", isDirectory: true)
+        let dir = base.appendingPathComponent("PerformaWhisper", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }

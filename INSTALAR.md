@@ -1,4 +1,4 @@
-# WhisperFlow — Instruções de instalação
+# PerformaWhisper — Instruções de instalação
 
 Ditado por voz com IA para Mac: segure um atalho, fale, solte — e o texto aparece
 polido onde seu cursor estiver, em qualquer aplicativo. A transcrição roda **100%
@@ -19,7 +19,7 @@ localmente no seu Mac** (nada de áudio indo para a nuvem).
 
 ### 1. Copie o app para a pasta Aplicativos
 
-Descompacte o `WhisperFlow.zip` (clique duplo) e arraste o **WhisperFlow.app**
+Descompacte o `PerformaWhisper.zip` (clique duplo) e arraste o **PerformaWhisper.app**
 para a pasta **Aplicativos**.
 
 ### 2. Libere o app no Gatekeeper
@@ -29,19 +29,19 @@ Como o app não vem da App Store, o macOS vai bloqueá-lo na primeira abertura
 (⌘Espaço → digite "Terminal") e cole este comando:
 
 ```sh
-xattr -cr /Applications/WhisperFlow.app
+xattr -cr /Applications/PerformaWhisper.app
 ```
 
 Aperte Enter. Pronto — isso só remove a marca de "arquivo baixado da internet".
 
 ### 3. Abra e conceda as permissões
 
-Abra o WhisperFlow (⌘Espaço → "WhisperFlow"). Uma janela de boas-vindas vai pedir
+Abra o PerformaWhisper (⌘Espaço → "PerformaWhisper"). Uma janela de boas-vindas vai pedir
 duas permissões:
 
 1. **Microfone** — clique em "Permitir" e confirme.
 2. **Acessibilidade** — clique em "Permitir"; os Ajustes do Sistema vão abrir.
-   Ligue a chavinha do **WhisperFlow** na lista. Essa permissão é o que deixa o
+   Ligue a chavinha do **PerformaWhisper** na lista. Essa permissão é o que deixa o
    app detectar o atalho de teclado e digitar o texto para você.
 
 Volte à janela do app: quando os dois itens estiverem com ✓ verde, clique em
@@ -84,13 +84,13 @@ porém, fica indisponível).
 - **Snippets**: frases faladas que viram textos prontos (ex.: "assinatura de
   e-mail" → sua assinatura completa).
 - **Abrir junto com o Mac**: Ajustes do Sistema → Geral → Itens de Início de
-  Sessão → "+" → WhisperFlow.
+  Sessão → "+" → PerformaWhisper.
 
 ## Problemas comuns
 
 - **Seguro o atalho e nada acontece** → a Acessibilidade não está valendo. Vá em
   Ajustes do Sistema → Privacidade e Segurança → Acessibilidade, desligue e ligue
-  a chavinha do WhisperFlow, e reabra o app.
+  a chavinha do PerformaWhisper, e reabra o app.
 - **"Modelo ainda carregando…"** → aguarde o download terminar (barra de menu
   mostra o progresso).
 - **Texto não aparece no app de destino** → alguns campos protegidos (senhas)

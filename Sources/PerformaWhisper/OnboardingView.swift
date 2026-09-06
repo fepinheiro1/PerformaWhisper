@@ -13,7 +13,7 @@ struct OnboardingView: View {
             Image(systemName: "waveform.circle.fill")
                 .font(.system(size: 56))
                 .foregroundStyle(.tint)
-            Text("Bem-vindo ao WhisperFlow")
+            Text("Bem-vindo ao PerformaWhisper")
                 .font(.title.bold())
             Text("Ditado por voz local e privado, em qualquer app.\nPrecisamos de duas permissões para funcionar:")
                 .multilineTextAlignment(.center)
