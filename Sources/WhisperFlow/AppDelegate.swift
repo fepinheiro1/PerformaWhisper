@@ -44,10 +44,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(hint)
         menu.addItem(.separator())
 
-        menu.addItem(NSMenuItem(title: "Configurações…", action: #selector(openSettings), keyEquivalent: ","))
+        let settingsItem = NSMenuItem(title: "Configurações…", action: #selector(openSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        menu.addItem(settingsItem)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Sair do WhisperFlow", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
-        menu.items.forEach { $0.target = self }
+
+        // Quit keeps a nil target on purpose: with an explicit target the menu
+        // validates against an object that does not respond to terminate(_:) and
+        // disables the item. Leaving it nil sends it up the responder chain to NSApp.
+        menu.addItem(NSMenuItem(title: "Sair do WhisperFlow",
+                                action: #selector(NSApplication.terminate(_:)),
+                                keyEquivalent: "q"))
         statusItem.menu = menu
     }
 

@@ -39,10 +39,16 @@ final class HotkeyManager {
     /// Whether `key` is currently pressed according to this flagsChanged event.
     /// Returns nil when the event is unrelated to `key` (single keys react only
     /// to their own key code; combos are re-evaluated on every flags change).
+    /// Modifiers we compare against, so caps lock and device-specific bits do not
+    /// count as part of a combo.
+    private static let trackedModifiers: CGEventFlags =
+        [.maskControl, .maskAlternate, .maskCommand, .maskShift, .maskSecondaryFn]
+
     private static func pressedState(for key: HoldKey, event: CGEvent) -> Bool? {
         if key.isCombo {
-            let mask = flagMask(for: key)
-            return event.flags.intersection(mask) == mask
+            // Exact match: Control+Option must not fire when the user is pressing
+            // Control+Option+Command or any other system shortcut built on top of it.
+            return event.flags.intersection(trackedModifiers) == flagMask(for: key)
         }
         let keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
         guard keyCode == Self.keyCode(for: key) else { return nil }

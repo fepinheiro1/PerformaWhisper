@@ -9,6 +9,8 @@ final class DictationController {
     enum PillState: Equatable {
         case hidden
         case downloadingModel(Double)
+        case loadingModel
+        case modelReady
         case recording(isCommand: Bool)
         case processing
         case success
@@ -23,7 +25,7 @@ final class DictationController {
     private var mode: Mode = .dictation
     private var isActive = false
     private var recordingStart: Date?
-    private var selectedTextForCommand: String?
+    private var selectionTask: Task<String?, Never>?
 
     var transcriberState: Transcriber.State { transcriberStateCache }
     private var transcriberStateCache: Transcriber.State = .idle
@@ -36,14 +38,18 @@ final class DictationController {
                 self.transcriberStateCache = state
                 self.onTranscriberState?(state)
                 switch state {
-                case .downloading(let p): self.pill.show(.downloadingModel(p))
+                case .downloading(let progress):
+                    self.pill.show(.downloadingModel(progress))
+                case .loading:
+                    self.pill.show(.loadingModel)
                 case .ready:
-                    self.pill.show(.success)
-                    self.pill.hideAfter(1.2)
+                    self.pill.show(.modelReady)
+                    self.pill.hideAfter(1.6)
                 case .failed(let msg):
                     self.pill.show(.error("Falha no modelo: \(msg)"))
                     self.pill.hideAfter(4)
-                default: break
+                case .idle:
+                    break
                 }
             }
         }
@@ -78,17 +84,19 @@ final class DictationController {
         self.mode = mode
         isActive = true
         recordingStart = Date()
-        selectedTextForCommand = nil
-
-        if mode == .command {
-            // Grab the selection before recording so the user can speak the instruction.
-            selectedTextForCommand = TextInserter.copySelection()
-        }
+        selectionTask?.cancel()
+        selectionTask = nil
 
         do {
             try recorder.start()
             if Preferences.shared.playSounds { NSSound(named: "Pop")?.play() }
             pill.show(.recording(isCommand: mode == .command))
+
+            if mode == .command {
+                // Grab the selection while the user speaks: copying waits on the
+                // target app, and doing that inline would freeze the UI.
+                selectionTask = Task { @MainActor in await TextInserter.copySelection() }
+            }
         } catch {
             isActive = false
             pill.show(.error(error.localizedDescription))
@@ -102,15 +110,18 @@ final class DictationController {
         let samples = recorder.stop()
         let duration = recordingStart.map { Date().timeIntervalSince($0) } ?? 0
 
+        let pendingSelection = selectionTask
+        selectionTask = nil
+
         // Ignore accidental taps (< 0.3 s of audio).
         guard samples.count > Int(AudioRecorder.targetSampleRate * 0.3) else {
+            pendingSelection?.cancel()
             pill.hide()
             return
         }
 
         pill.show(.processing)
         let mode = self.mode
-        let selected = self.selectedTextForCommand
         let context = ActiveAppContext.current()
 
         Task {
@@ -127,6 +138,7 @@ final class DictationController {
                 case .dictation:
                     final = await AIFormatter.cleanup(raw, context: context)
                 case .command:
+                    let selected = await pendingSelection?.value
                     guard let selected, !selected.isEmpty else {
                         pill.show(.error("Selecione um texto antes de usar o Command Mode"))
                         pill.hideAfter(3)
@@ -146,13 +158,15 @@ final class DictationController {
                 pill.show(.success)
                 pill.hideAfter(1.0)
 
-                DataStore.shared.addHistory(HistoryEntry(
-                    date: Date(),
-                    appName: context.appName,
-                    rawText: raw,
-                    finalText: final,
-                    durationSeconds: duration
-                ))
+                if Preferences.shared.saveHistory {
+                    DataStore.shared.addHistory(HistoryEntry(
+                        date: Date(),
+                        appName: context.appName,
+                        rawText: raw,
+                        finalText: final,
+                        durationSeconds: duration
+                    ))
+                }
             } catch {
                 pill.show(.error(error.localizedDescription))
                 pill.hideAfter(4)
@@ -163,6 +177,8 @@ final class DictationController {
     private func cancelSession() {
         guard isActive else { return }
         isActive = false
+        selectionTask?.cancel()
+        selectionTask = nil
         recorder.cancel()
         if Preferences.shared.playSounds { NSSound(named: "Bottle")?.play() }
         pill.hide()

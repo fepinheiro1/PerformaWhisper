@@ -9,20 +9,24 @@ enum AIFormatter {
 
     /// Cleanup pass applied to every dictation.
     static func cleanup(_ raw: String, context: ActiveAppContext) async -> String {
-        let text = DataStore.shared.applySnippets(to: raw)
-        guard Preferences.shared.aiCleanupEnabled,
-              !Preferences.shared.openAIKey.isEmpty else {
-            return ruleBasedCleanup(text)
+        let cleaned: String
+        if Preferences.shared.aiCleanupEnabled, !Preferences.shared.openAIKey.isEmpty {
+            do {
+                cleaned = try await callOpenAI(
+                    system: cleanupSystemPrompt(context: context),
+                    user: raw
+                )
+            } catch {
+                NSLog("WhisperFlow: OpenAI falhou (\(error.localizedDescription)); usando limpeza por regras")
+                cleaned = ruleBasedCleanup(raw)
+            }
+        } else {
+            cleaned = ruleBasedCleanup(raw)
         }
-        do {
-            return try await callOpenAI(
-                system: cleanupSystemPrompt(context: context),
-                user: text
-            )
-        } catch {
-            NSLog("WhisperFlow: OpenAI falhou (\(error.localizedDescription)); usando limpeza por regras")
-            return ruleBasedCleanup(text)
-        }
+
+        // Snippets expand last: the model is told to rewrite and restructure, so
+        // expanding first let it reformat things like e-mail signatures.
+        return DataStore.shared.applySnippets(to: cleaned)
     }
 
     /// Command Mode: applies a spoken instruction to the selected text.
@@ -126,13 +130,22 @@ enum AIFormatter {
 
     // MARK: - Rule-based fallback
 
-    static func ruleBasedCleanup(_ text: String) -> String {
+    /// Hesitations that are not real words in any language we transcribe.
+    private static let commonFillers = ["ãh", "aham", "hum", "hmm", "né", "tipo assim",
+                                        "uh", "uhm", "erm", "you know"]
+
+    /// Ambiguous outside English: "um" is the Portuguese indefinite article and
+    /// "ah" a normal interjection, so stripping them mangles PT-BR dictation.
+    private static let englishOnlyFillers = ["um", "ah"]
+
+    static func ruleBasedCleanup(_ text: String,
+                                 language: String = Preferences.shared.language) -> String {
         var t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty else { return t }
 
-        // Common PT-BR and EN fillers as standalone words.
-        let fillers = ["ãh", "ah", "aham", "hum", "hmm", "né", "tipo assim",
-                       "uh", "um", "uhm", "erm", "you know"]
+        var fillers = commonFillers
+        if language == "en" { fillers += englishOnlyFillers }
+
         for f in fillers {
             t = t.replacingOccurrences(
                 of: #"(?i)(^|[\s,])\#(NSRegularExpression.escapedPattern(for: f))($|[\s,.!?])"#,
@@ -142,7 +155,16 @@ enum AIFormatter {
         }
         t = t.replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
         t = t.replacingOccurrences(of: #"\s+([,.!?;:])"#, with: "$1", options: .regularExpression)
+
+        // Removing a filler can leave punctuation stranded ("tipo assim, sabe, né"
+        // → ", sabe,"), so repair the seams before finishing the sentence.
+        t = t.replacingOccurrences(of: #"^[\s,;:.]+"#, with: "", options: .regularExpression)
+        t = t.replacingOccurrences(of: #"(,\s*){2,}"#, with: ", ", options: .regularExpression)
+        t = t.replacingOccurrences(of: #",\s*([.!?])"#, with: "$1", options: .regularExpression)
+        // Allow for the trailing space a removed filler leaves behind.
+        t = t.replacingOccurrences(of: #"[,;:]+\s*$"#, with: "", options: .regularExpression)
         t = t.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return t }
 
         if let first = t.first, first.isLowercase {
             t = first.uppercased() + t.dropFirst()

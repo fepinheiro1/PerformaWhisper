@@ -100,6 +100,15 @@ struct PillView: View {
                  ? "Baixando modelo… \(Int(progress * 100))%"
                  : "Preparando modelo…")
                 .font(.system(size: 13, weight: .medium))
+        case .loadingModel:
+            ProgressView().controlSize(.small)
+            Text("Carregando modelo…")
+                .font(.system(size: 13, weight: .medium))
+        case .modelReady:
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+            Text("Pronto para ditar")
+                .font(.system(size: 13, weight: .medium))
         case .recording(let isCommand):
             Circle()
                 .fill(isCommand ? Color.purple : Color.red)

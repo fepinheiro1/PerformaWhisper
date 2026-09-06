@@ -44,7 +44,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 PLIST
 
 # Ad-hoc signature so TCC (mic/accessibility) permissions persist.
-codesign --force --deep --sign - "$APP"
+# No --deep: it is deprecated and the bundle has no nested code anyway.
+codesign --force --sign - "$APP"
 
 echo "✓ Pronto: $PWD/$APP"
 echo "  Mova para /Applications se quiser: cp -r $APP /Applications/"

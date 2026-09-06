@@ -16,13 +16,11 @@ final class AudioRecorder {
 
     static let targetSampleRate: Double = 16000
 
-    func requestPermission() async -> Bool {
-        await AVCaptureDevice.requestAccess(for: .audio)
-    }
-
     func start() throws {
         guard !isRecording else { return }
+        lock.lock()
         samples.removeAll()
+        lock.unlock()
 
         let input = engine.inputNode
         let inputFormat = input.outputFormat(forBus: 0)

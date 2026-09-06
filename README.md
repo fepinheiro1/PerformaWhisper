@@ -5,7 +5,7 @@ Ditado por voz com IA para macOS — inspirado no [Wispr Flow](https://wisprflow
 
 ## Como funciona
 
-1. Segure a tecla de ditado (padrão: **⌥ Option direita**) em qualquer app.
+1. Segure a tecla de ditado (padrão: **⌃ Control + ⌥ Option**) em qualquer app.
 2. Fale naturalmente. Uma pílula na base da tela mostra que está ouvindo.
 3. Solte a tecla: o texto transcrito, limpo e pontuado é inserido onde o cursor está.
 4. **Esc** cancela um ditado em andamento.
@@ -22,10 +22,10 @@ O texto selecionado é substituído pelo resultado. (Requer chave da OpenAI.)
   enviar seu áudio para lugar nenhum.
 - **Limpeza com IA** (OpenAI `gpt-4o-mini`): remove "ãh/tipo/né", conserta pontuação e adapta
   o tom ao app ativo (casual no Slack, formal no Mail, literal em editores de código).
-  Sem chave de API, usa limpeza básica por regras.
+  Sem chave de API, usa limpeza básica por regras. A chave fica no Keychain.
 - **Dicionário pessoal**: nomes e jargões que o reconhecimento costuma errar.
 - **Snippets**: frases faladas que expandem para textos prontos.
-- **Histórico** dos últimos 200 ditados com WPM.
+- **Histórico** dos últimos 200 ditados com WPM (desligável nas Configurações).
 - **Detecção de contexto sem screenshots** — só o nome do app ativo é usado (diferente do
   Wispr Flow, nada de captura de tela).
 
@@ -36,7 +36,7 @@ swift build            # debug
 ./make-app.sh          # gera build/WhisperFlow.app (release, assinado ad-hoc)
 ```
 
-Requisitos: macOS 13+, Apple Silicon recomendado, Swift 6 (Command Line Tools bastam).
+Requisitos: macOS 13+, Apple Silicon recomendado, Swift 5.9+ (Command Line Tools bastam).
 
 ## Permissões
 
@@ -49,6 +49,5 @@ O onboarding do app guia as duas permissões na primeira execução.
 ## Testes de linha de comando
 
 ```sh
-.build/debug/WhisperFlow --whisper-info                 # confirma o link do WhisperKit
-.build/debug/WhisperFlow --test-transcribe audio.wav     # transcreve um arquivo
+.build/debug/WhisperFlow --test-transcribe audio.wav   # transcreve um arquivo wav
 ```

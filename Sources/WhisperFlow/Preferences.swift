@@ -69,9 +69,34 @@ final class Preferences {
         set { d.set(newValue, forKey: "language") }
     }
 
+    // MARK: - OpenAI key (Keychain-backed)
+
+    private static let openAIAccount = "openAIKey"
+    private var cachedOpenAIKey: String?
+
+    /// Stored in the Keychain. Values written by older builds lived in
+    /// UserDefaults and are migrated on first read.
     var openAIKey: String {
-        get { d.string(forKey: "openAIKey") ?? "" }
-        set { d.set(newValue, forKey: "openAIKey") }
+        get {
+            if let cachedOpenAIKey { return cachedOpenAIKey }
+
+            if let legacy = d.string(forKey: Self.openAIAccount), !legacy.isEmpty {
+                // Only drop the plaintext copy once the Keychain actually took it.
+                if Keychain.write(legacy, account: Self.openAIAccount) {
+                    d.removeObject(forKey: Self.openAIAccount)
+                }
+                cachedOpenAIKey = legacy
+                return legacy
+            }
+
+            let value = Keychain.read(Self.openAIAccount) ?? ""
+            cachedOpenAIKey = value
+            return value
+        }
+        set {
+            Keychain.write(newValue, account: Self.openAIAccount)
+            cachedOpenAIKey = newValue
+        }
     }
 
     var aiCleanupEnabled: Bool {
@@ -87,6 +112,13 @@ final class Preferences {
     var playSounds: Bool {
         get { d.object(forKey: "playSounds") as? Bool ?? true }
         set { d.set(newValue, forKey: "playSounds") }
+    }
+
+    /// Dictations are transcribed locally but the transcript is kept on disk in
+    /// plain JSON, so it has to be possible to turn off.
+    var saveHistory: Bool {
+        get { d.object(forKey: "saveHistory") as? Bool ?? true }
+        set { d.set(newValue, forKey: "saveHistory") }
     }
 
     var onboardingDone: Bool {

@@ -29,6 +29,7 @@ private struct GeneralTab: View {
     @State private var model = Preferences.shared.modelName
     @State private var language = Preferences.shared.language
     @State private var playSounds = Preferences.shared.playSounds
+    @State private var saveHistory = Preferences.shared.saveHistory
 
     private let models: [(String, String)] = [
         ("tiny", "Tiny — mais rápido, menos preciso (~75 MB)"),
@@ -46,13 +47,15 @@ private struct GeneralTab: View {
 
     var body: some View {
         Form {
+            // Each picker hides the key the other one uses: the same key on both
+            // modes silently disables Command Mode.
             Picker("Tecla de ditado:", selection: $holdKey) {
-                ForEach(HoldKey.allCases) { Text($0.label).tag($0) }
+                ForEach(HoldKey.allCases.filter { $0 != commandKey }) { Text($0.label).tag($0) }
             }
             .onChange(of: holdKey) { v in Preferences.shared.holdKey = v }
 
             Picker("Tecla do Command Mode:", selection: $commandKey) {
-                ForEach(HoldKey.allCases) { Text($0.label).tag($0) }
+                ForEach(HoldKey.allCases.filter { $0 != holdKey }) { Text($0.label).tag($0) }
             }
             .onChange(of: commandKey) { v in Preferences.shared.commandModeKey = v }
 
@@ -77,6 +80,13 @@ private struct GeneralTab: View {
 
             Toggle("Sons de início/fim de ditado", isOn: $playSounds)
                 .onChange(of: playSounds) { v in Preferences.shared.playSounds = v }
+
+            Toggle("Salvar histórico de ditados", isOn: $saveHistory)
+                .onChange(of: saveHistory) { v in Preferences.shared.saveHistory = v }
+
+            Text("O histórico fica em texto puro no seu Mac (Application Support). Desligue se for ditar informação sensível.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .padding(24)
     }
