@@ -133,6 +133,14 @@ Neural Engine a transcrição é bem mais lenta — veja a recomendação de mod
 
 O onboarding do app guia as duas permissões na primeira execução.
 
+## Licença
+
+[MIT](LICENSE) — use, modifique, redistribua e até venda, à vontade. A única exigência é
+manter o aviso de copyright. Se fizer algo interessante com o código, gostaria de saber.
+
+As dependências são compatíveis: WhisperKit é MIT; swift-transformers, swift-argument-parser,
+swift-collections e swift-crypto são Apache 2.0.
+
 ## Testes de linha de comando
 
 ```sh
