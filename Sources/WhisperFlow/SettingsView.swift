@@ -49,12 +49,12 @@ private struct GeneralTab: View {
             Picker("Tecla de ditado:", selection: $holdKey) {
                 ForEach(HoldKey.allCases) { Text($0.label).tag($0) }
             }
-            .onChange(of: holdKey) { _, v in Preferences.shared.holdKey = v }
+            .onChange(of: holdKey) { v in Preferences.shared.holdKey = v }
 
             Picker("Tecla do Command Mode:", selection: $commandKey) {
                 ForEach(HoldKey.allCases) { Text($0.label).tag($0) }
             }
-            .onChange(of: commandKey) { _, v in Preferences.shared.commandModeKey = v }
+            .onChange(of: commandKey) { v in Preferences.shared.commandModeKey = v }
 
             Text("Segure a tecla, fale, e solte para inserir o texto. Esc cancela.")
                 .font(.caption)
@@ -65,7 +65,7 @@ private struct GeneralTab: View {
             Picker("Modelo de voz:", selection: $model) {
                 ForEach(models, id: \.0) { Text($0.1).tag($0.0) }
             }
-            .onChange(of: model) { _, v in
+            .onChange(of: model) { v in
                 Preferences.shared.modelName = v
                 onModelChanged()
             }
@@ -73,10 +73,10 @@ private struct GeneralTab: View {
             Picker("Idioma:", selection: $language) {
                 ForEach(languages, id: \.0) { Text($0.1).tag($0.0) }
             }
-            .onChange(of: language) { _, v in Preferences.shared.language = v }
+            .onChange(of: language) { v in Preferences.shared.language = v }
 
             Toggle("Sons de início/fim de ditado", isOn: $playSounds)
-                .onChange(of: playSounds) { _, v in Preferences.shared.playSounds = v }
+                .onChange(of: playSounds) { v in Preferences.shared.playSounds = v }
         }
         .padding(24)
     }
@@ -92,10 +92,10 @@ private struct AITab: View {
     var body: some View {
         Form {
             Toggle("Limpeza com IA (remover vícios de fala, pontuação, tom)", isOn: $enabled)
-                .onChange(of: enabled) { _, v in Preferences.shared.aiCleanupEnabled = v }
+                .onChange(of: enabled) { v in Preferences.shared.aiCleanupEnabled = v }
 
             SecureField("Chave da API OpenAI (sk-…):", text: $key)
-                .onChange(of: key) { _, v in Preferences.shared.openAIKey = v }
+                .onChange(of: key) { v in Preferences.shared.openAIKey = v }
 
             Text("Sem chave, o app usa uma limpeza básica por regras e o Command Mode fica indisponível. A transcrição de voz é sempre 100% local e offline.")
                 .font(.caption)
@@ -106,7 +106,7 @@ private struct AITab: View {
             Picker("Tom do texto:", selection: $tone) {
                 ForEach(ToneStyle.allCases) { Text($0.label).tag($0) }
             }
-            .onChange(of: tone) { _, v in Preferences.shared.tone = v }
+            .onChange(of: tone) { v in Preferences.shared.tone = v }
 
             Text("No modo automático, o tom se adapta ao app ativo: casual no Slack/WhatsApp, formal no Mail, literal em editores de código.")
                 .font(.caption)

@@ -36,7 +36,7 @@ swift build            # debug
 ./make-app.sh          # gera build/WhisperFlow.app (release, assinado ad-hoc)
 ```
 
-Requisitos: macOS 14+, Apple Silicon recomendado, Swift 6 (Command Line Tools bastam).
+Requisitos: macOS 13+, Apple Silicon recomendado, Swift 6 (Command Line Tools bastam).
 
 ## Permissões
 

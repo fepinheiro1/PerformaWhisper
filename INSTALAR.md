@@ -6,7 +6,7 @@ localmente no seu Mac** (nada de áudio indo para a nuvem).
 
 ## Requisitos
 
-- macOS 14 (Sonoma) ou mais novo
+- macOS 13 (Ventura) ou mais novo
 - Funciona em Macs com chip Apple (M1/M2/M3/M4) **e** em Macs Intel
 - Internet só na primeira execução (para baixar o modelo de voz) e,
   opcionalmente, para a formatação com IA

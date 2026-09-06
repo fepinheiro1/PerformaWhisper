@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "WhisperFlow",
     platforms: [
-        .macOS(.v14)
+        .macOS(.v13)
     ],
     dependencies: [
         .package(url: "https://github.com/argmaxinc/WhisperKit", from: "0.9.0")
