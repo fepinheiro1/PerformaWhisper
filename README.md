@@ -106,11 +106,18 @@ O histórico dos últimos 200 ditados fica em texto puro em
 ## Build
 
 ```sh
-swift build            # debug
-./make-app.sh          # gera build/PerformaWhisper.app (release, assinado ad-hoc)
+swift build            # debug, só a arquitetura da máquina
+./make-app.sh          # release universal, gera build/PerformaWhisper.app assinado ad-hoc
 ```
 
-Requisitos: macOS 13+, Apple Silicon recomendado, Swift 5.9+ (Command Line Tools bastam).
+O `make-app.sh` compila `arm64` e `x86_64` em separado (`swift build --triple`) e une os
+dois com `lipo`, então o mesmo `.app` roda em Apple Silicon e em Macs Intel. A variante
+`swift build --arch arm64 --arch x86_64` não serve aqui: ela exige o Xcode completo,
+enquanto o caminho com `--triple` funciona só com as Command Line Tools. Se uma das
+arquiteturas falhar, o script avisa e segue com a outra.
+
+Requisitos: macOS 13+, Swift 5.9+ (Command Line Tools bastam). Roda em Intel, mas sem
+Neural Engine a transcrição é bem mais lenta — veja a recomendação de modelo acima.
 
 ## Permissões
 

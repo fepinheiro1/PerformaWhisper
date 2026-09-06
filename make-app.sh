@@ -3,14 +3,47 @@
 set -e
 cd "$(dirname "$0")"
 
-echo "→ Compilando (release)…"
-swift build -c release
+# Binário universal: um .app só que roda em Apple Silicon e em Macs Intel.
+# Cada arquitetura é compilada em separado com --triple e depois unida com lipo,
+# porque `swift build --arch a --arch b` exige o Xcode completo, e aqui as
+# Command Line Tools bastam.
+DEPLOY_TARGET="13.0"
+ARM_BIN=".build/arm64-apple-macosx/release/PerformaWhisper"
+X86_BIN=".build/x86_64-apple-macosx/release/PerformaWhisper"
+BUILT_ARCHS=()
+
+for arch in arm64 x86_64; do
+    echo "→ Compilando release para $arch…"
+    if swift build -c release --triple "${arch}-apple-macosx${DEPLOY_TARGET}"; then
+        BUILT_ARCHS+=("$arch")
+    else
+        echo "  ⚠️  Falhou para $arch — seguindo sem essa arquitetura."
+    fi
+done
+
+if [ ${#BUILT_ARCHS[@]} -eq 0 ]; then
+    echo "✗ Nenhuma arquitetura compilou. Abortando."
+    exit 1
+fi
 
 APP="build/PerformaWhisper.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp .build/release/PerformaWhisper "$APP/Contents/MacOS/PerformaWhisper"
+if [ ${#BUILT_ARCHS[@]} -eq 2 ]; then
+    lipo -create "$ARM_BIN" "$X86_BIN" -output "$APP/Contents/MacOS/PerformaWhisper"
+    echo "→ Binário universal: $(lipo -archs "$APP/Contents/MacOS/PerformaWhisper")"
+else
+    # Só uma arquitetura compilou: o .app roda apenas em Macs equivalentes.
+    only="${BUILT_ARCHS[1]}"
+    [ "$only" = "arm64" ] && cp "$ARM_BIN" "$APP/Contents/MacOS/PerformaWhisper" \
+                          || cp "$X86_BIN" "$APP/Contents/MacOS/PerformaWhisper"
+    echo "  ⚠️  App gerado só para $only — não vai abrir em Macs de outra arquitetura."
+fi
+
+# Os bundles de recurso são iguais nas duas arquiteturas; usa os da primeira que
+# compilou.
+RES_DIR=".build/${BUILT_ARCHS[1]}-apple-macosx/release"
 
 # Wordmark shown in the onboarding window, loaded via Bundle.main.
 cp Assets/logo-light.png Assets/logo-dark.png "$APP/Contents/Resources/"
@@ -22,7 +55,7 @@ cp Assets/logo-light.png Assets/logo-dark.png "$APP/Contents/Resources/"
 # In practice the only consumer is swift-transformers' gpt2/t5 fallback
 # tokenizer config, which Whisper never asks for — but an .app copied to a Mac
 # that did not build it would trap there rather than degrade.
-for bundle in .build/release/*.bundle; do
+for bundle in "$RES_DIR"/*.bundle; do
     [ -e "$bundle" ] && cp -R "$bundle" "$APP/Contents/Resources/"
 done
 

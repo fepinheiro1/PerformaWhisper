@@ -7,7 +7,8 @@ localmente no seu Mac** (nada de áudio indo para a nuvem).
 ## Requisitos
 
 - macOS 13 (Ventura) ou mais novo
-- Funciona em Macs com chip Apple (M1/M2/M3/M4) **e** em Macs Intel
+- Funciona em Macs com chip Apple (M1/M2/M3/M4) **e** em Macs Intel — o app é
+  distribuído como binário universal, então é o mesmo arquivo para os dois
 - Internet só na primeira execução (para baixar o modelo de voz) e,
   opcionalmente, para a formatação com IA
 
@@ -15,7 +16,14 @@ localmente no seu Mac** (nada de áudio indo para a nuvem).
 > neural dos Macs M). Dica: em **Configurações → Geral → Modelo de voz**, escolha
 > **Base** ou **Tiny** — ficam bem mais rápidos e ainda têm boa qualidade.
 
-## Instalação (5 minutos)
+## Duas formas de instalar
+
+| Você quer | Vá para |
+|---|---|
+| **Só usar o app** | [Instalação rápida](#instalação-rápida-5-minutos), abaixo |
+| **Mexer no código** | [Compilando do código-fonte](#compilando-do-código-fonte), no fim |
+
+## Instalação rápida (5 minutos)
 
 ### 1. Copie o app para a pasta Aplicativos
 
@@ -101,6 +109,35 @@ porém, fica indisponível).
   mostra o progresso).
 - **Texto não aparece no app de destino** → alguns campos protegidos (senhas)
   bloqueiam colagem; teste primeiro nas Notas.
+
+## Compilando do código-fonte
+
+Só para quem quer mexer no código. Para usar o app, a instalação rápida acima basta.
+
+**Pré-requisitos:** as Command Line Tools do Xcode com Swift 5.9 ou mais novo. No
+Ventura isso quer dizer Xcode 15 (`xcode-select --install` instala as ferramentas).
+
+```sh
+git clone https://github.com/fepinheiro1/PerformaWhisper.git
+cd PerformaWhisper
+./make-app.sh
+cp -r build/PerformaWhisper.app /Applications/
+```
+
+O `make-app.sh` compila as duas arquiteturas, une num binário universal, gera o ícone
+e assina o app. Se uma das arquiteturas falhar, ele avisa e segue com a outra — o app
+resultante só abre em Macs equivalentes.
+
+A primeira compilação baixa as dependências (WhisperKit e companhia) e leva alguns
+minutos; num Mac Intel mais antigo, bastante mais. As seguintes são rápidas.
+
+Compilado localmente, o app não passa pelo Gatekeeper, então o `xattr -cr` do passo 2
+não é necessário. As permissões de Microfone e Acessibilidade continuam valendo.
+
+> Como a assinatura é ad-hoc, cada recompilação muda a assinatura e o macOS pode
+> derrubar a permissão de Acessibilidade. Se o atalho parar de responder depois de
+> recompilar, desligue e ligue a chavinha do app em Ajustes do Sistema → Privacidade
+> e Segurança → Acessibilidade.
 
 ---
 
