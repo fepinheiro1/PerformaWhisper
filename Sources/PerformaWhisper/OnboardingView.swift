@@ -40,19 +40,40 @@ struct OnboardingView: View {
                     action: {
                         let opts = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
                         AXIsProcessTrustedWithOptions(opts)
+                        // O prompt do sistema só aparece uma vez por app; depois disso
+                        // o botão não faria nada visível. Abrir os Ajustes garante que
+                        // sempre haja um próximo passo.
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                            NSWorkspace.shared.open(url)
+                        }
                     }
                 )
             }
             .padding(.horizontal)
 
+            if !axGranted {
+                // O macOS guarda a permissão junto com a assinatura do app. Como a
+                // assinatura ad-hoc muda a cada build, reinstalar deixa a chave ligada
+                // apontando para a versão antiga.
+                Text("Já ligou a chave e continua aparecendo pendente? Acontece depois de reinstalar: selecione o PerformaWhisper na lista de Acessibilidade, remova com o botão “−” e ligue de novo.")
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+            }
+
             Text("Depois de conceder, segure ⌃ Control + ⌥ Option e fale. Solte para inserir o texto.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            Button("Começar a usar") { onDone() }
+            // Só o microfone bloqueia. A checagem de acessibilidade pode ficar presa
+            // em "não concedida" mesmo com a chave ligada, e travar a pessoa nesta
+            // tela para sempre é pior do que deixar entrar com o atalho inativo — a
+            // barra de menus avisa quando falta a permissão.
+            Button(axGranted ? "Começar a usar" : "Continuar mesmo assim") { onDone() }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .disabled(!(micGranted && axGranted))
+                .disabled(!micGranted)
         }
         .padding(32)
         .frame(width: 460)

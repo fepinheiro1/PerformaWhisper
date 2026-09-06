@@ -105,6 +105,12 @@ porém, fica indisponível).
 - **Seguro o atalho e nada acontece** → a Acessibilidade não está valendo. Vá em
   Ajustes do Sistema → Privacidade e Segurança → Acessibilidade, desligue e ligue
   a chavinha do PerformaWhisper, e reabra o app.
+- **A chave da Acessibilidade está ligada, mas o app insiste que falta permissão**
+  → acontece depois de atualizar o app. O macOS guarda a permissão junto com a
+  assinatura da versão que você autorizou; quando o app é substituído, a chave
+  continua ligada mas aponta para a assinatura antiga. Selecione o
+  **PerformaWhisper** na lista, remova com o botão **“−”** abaixo dela, e conceda
+  de novo. Só desligar e religar a chave costuma não resolver.
 - **"Modelo ainda carregando…"** → aguarde o download terminar (barra de menu
   mostra o progresso).
 - **Texto não aparece no app de destino** → alguns campos protegidos (senhas)

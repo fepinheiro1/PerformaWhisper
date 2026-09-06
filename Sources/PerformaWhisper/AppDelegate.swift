@@ -3,13 +3,14 @@ import SwiftUI
 import ApplicationServices
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private var settingsWindow: NSWindow?
     private var onboardingWindow: NSWindow?
     private var aboutWindow: NSWindow?
     private let controller = DictationController()
     private var stateMenuItem: NSMenuItem!
+    private var accessibilityMenuItem: NSMenuItem!
 
     /// Applies the Dock-icon preference. `.regular` puts the app in the Dock and
     /// the app switcher; `.accessory` keeps it menu-bar only.
@@ -29,6 +30,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             controller.start()
         } else {
             showOnboarding()
+        }
+    }
+
+    // MARK: - Menu delegate
+
+    /// A permissão de acessibilidade pode ser revogada a qualquer momento, e o
+    /// macOS a invalida sozinho quando a assinatura do app muda. Reavalia toda vez
+    /// que o menu abre, em vez de confiar no estado do lançamento.
+    func menuWillOpen(_ menu: NSMenu) {
+        let trusted = AXIsProcessTrusted()
+        accessibilityMenuItem.isHidden = trusted
+        if !trusted {
+            accessibilityMenuItem.title = "⚠️ Acessibilidade desativada — o atalho não funciona"
         }
     }
 
@@ -79,9 +93,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let menu = NSMenu()
+        menu.delegate = self
         stateMenuItem = NSMenuItem(title: "Carregando modelo…", action: nil, keyEquivalent: "")
         stateMenuItem.isEnabled = false
         menu.addItem(stateMenuItem)
+
+        // Sem acessibilidade o atalho global não funciona. Clicar abre os Ajustes.
+        accessibilityMenuItem = NSMenuItem(title: "",
+                                           action: #selector(openAccessibilitySettings),
+                                           keyEquivalent: "")
+        accessibilityMenuItem.target = self
+        accessibilityMenuItem.isHidden = true
+        menu.addItem(accessibilityMenuItem)
         menu.addItem(.separator())
 
         let hint = NSMenuItem(title: "Segure \(Preferences.shared.holdKey.label.components(separatedBy: " (").first ?? "") para ditar",
@@ -139,6 +162,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow?.center()
         settingsWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func openAccessibilitySettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     @objc private func openAbout() {
