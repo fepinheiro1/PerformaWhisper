@@ -136,6 +136,12 @@ final class Preferences {
         set { d.set(newValue, forKey: "saveHistory") }
     }
 
+    /// Menu-bar-only by default; with this on the app also gets a Dock icon.
+    var showDockIcon: Bool {
+        get { d.bool(forKey: "showDockIcon") }
+        set { d.set(newValue, forKey: "showDockIcon") }
+    }
+
     var onboardingDone: Bool {
         get { d.bool(forKey: "onboardingDone") }
         set { d.set(newValue, forKey: "onboardingDone") }

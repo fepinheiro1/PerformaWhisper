@@ -7,10 +7,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var settingsWindow: NSWindow?
     private var onboardingWindow: NSWindow?
+    private var aboutWindow: NSWindow?
     private let controller = DictationController()
     private var stateMenuItem: NSMenuItem!
 
+    /// Applies the Dock-icon preference. `.regular` puts the app in the Dock and
+    /// the app switcher; `.accessory` keeps it menu-bar only.
+    static func applyActivationPolicy() {
+        NSApp.setActivationPolicy(Preferences.shared.showDockIcon ? .regular : .accessory)
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        setupMainMenu()
         setupStatusItem()
 
         controller.onTranscriberState = { [weak self] state in
@@ -22,6 +30,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             showOnboarding()
         }
+    }
+
+    // MARK: - Main menu
+
+    /// With a Dock icon the app also gets a real menu bar. Without these items it
+    /// would show an empty one, and ⌘C/⌘V would stop working in the text fields.
+    private func setupMainMenu() {
+        let mainMenu = NSMenu()
+
+        let appItem = NSMenuItem()
+        let appMenu = NSMenu()
+        let about = NSMenuItem(title: "Sobre o PerformaWhisper", action: #selector(openAbout), keyEquivalent: "")
+        about.target = self
+        appMenu.addItem(about)
+        appMenu.addItem(.separator())
+        let settings = NSMenuItem(title: "Configurações…", action: #selector(openSettings), keyEquivalent: ",")
+        settings.target = self
+        appMenu.addItem(settings)
+        appMenu.addItem(.separator())
+        appMenu.addItem(NSMenuItem(title: "Sair do PerformaWhisper",
+                                   action: #selector(NSApplication.terminate(_:)),
+                                   keyEquivalent: "q"))
+        appItem.submenu = appMenu
+        mainMenu.addItem(appItem)
+
+        let editItem = NSMenuItem()
+        let editMenu = NSMenu(title: "Editar")
+        editMenu.addItem(NSMenuItem(title: "Desfazer", action: Selector(("undo:")), keyEquivalent: "z"))
+        editMenu.addItem(NSMenuItem(title: "Refazer", action: Selector(("redo:")), keyEquivalent: "Z"))
+        editMenu.addItem(.separator())
+        editMenu.addItem(NSMenuItem(title: "Recortar", action: #selector(NSText.cut(_:)), keyEquivalent: "x"))
+        editMenu.addItem(NSMenuItem(title: "Copiar", action: #selector(NSText.copy(_:)), keyEquivalent: "c"))
+        editMenu.addItem(NSMenuItem(title: "Colar", action: #selector(NSText.paste(_:)), keyEquivalent: "v"))
+        editMenu.addItem(NSMenuItem(title: "Selecionar Tudo", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a"))
+        editItem.submenu = editMenu
+        mainMenu.addItem(editItem)
+
+        NSApp.mainMenu = mainMenu
     }
 
     // MARK: - Status bar
@@ -43,6 +89,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hint.isEnabled = false
         menu.addItem(hint)
         menu.addItem(.separator())
+
+        let aboutItem = NSMenuItem(title: "Sobre o PerformaWhisper", action: #selector(openAbout), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
 
         let settingsItem = NSMenuItem(title: "Configurações…", action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
@@ -76,14 +126,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let view = SettingsView(onModelChanged: { [weak self] in
                 Task { @MainActor in self?.controller.reloadModel() }
             })
-            let window = NSWindow(contentViewController: NSHostingController(rootView: view))
+            let hosting = NSHostingController(rootView: view)
+            let window = NSWindow(contentViewController: hosting)
             window.title = "PerformaWhisper — Configurações"
             window.styleMask = [.titled, .closable]
+            // Depois de trocar o styleMask a janela mantém o frame antigo e a área
+            // de conteúdo encolhe, truncando o texto. Redimensiona pelo conteúdo.
+            window.setContentSize(hosting.view.fittingSize)
             window.isReleasedWhenClosed = false
             settingsWindow = window
         }
         settingsWindow?.center()
         settingsWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func openAbout() {
+        if aboutWindow == nil {
+            let hosting = NSHostingController(rootView: AboutView())
+            let window = NSWindow(contentViewController: hosting)
+            window.title = "Sobre o PerformaWhisper"
+            window.styleMask = [.titled, .closable]
+            window.setContentSize(hosting.view.fittingSize)
+            window.isReleasedWhenClosed = false
+            window.center()
+            aboutWindow = window
+        }
+        aboutWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -96,9 +165,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.controller.start()
             }
         })
-        let window = NSWindow(contentViewController: NSHostingController(rootView: view))
+        let hosting = NSHostingController(rootView: view)
+        let window = NSWindow(contentViewController: hosting)
         window.title = "PerformaWhisper"
         window.styleMask = [.titled, .closable]
+        window.setContentSize(hosting.view.fittingSize)
         window.isReleasedWhenClosed = false
         onboardingWindow = window
         window.center()

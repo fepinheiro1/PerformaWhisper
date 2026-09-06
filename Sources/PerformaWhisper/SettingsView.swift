@@ -30,6 +30,7 @@ private struct GeneralTab: View {
     @State private var language = Preferences.shared.language
     @State private var playSounds = Preferences.shared.playSounds
     @State private var saveHistory = Preferences.shared.saveHistory
+    @State private var showDockIcon = Preferences.shared.showDockIcon
 
     private let models: [(String, String)] = [
         ("tiny", "Tiny — mais rápido, menos preciso (~75 MB)"),
@@ -83,6 +84,13 @@ private struct GeneralTab: View {
 
             Toggle("Salvar histórico de ditados", isOn: $saveHistory)
                 .onChange(of: saveHistory) { v in Preferences.shared.saveHistory = v }
+
+            Toggle("Mostrar ícone no Dock", isOn: $showDockIcon)
+                .onChange(of: showDockIcon) { v in
+                    Preferences.shared.showDockIcon = v
+                    AppDelegate.applyActivationPolicy()
+                }
+                .help("Com o ícone no Dock o app também aparece no alternador de janelas (⌘Tab). Sem ele, fica só na barra de menus.")
 
             Text("O histórico fica em texto puro no seu Mac (Application Support). Desligue se for ditar informação sensível.")
                 .font(.caption)
