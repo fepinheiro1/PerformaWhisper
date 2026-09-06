@@ -25,10 +25,12 @@ localmente no seu Mac** (nada de áudio indo para a nuvem).
 
 ## Instalação rápida (5 minutos)
 
-### 1. Copie o app para a pasta Aplicativos
+### 1. Baixe e copie o app para a pasta Aplicativos
 
-Descompacte o `PerformaWhisper.zip` (clique duplo) e arraste o **PerformaWhisper.app**
-para a pasta **Aplicativos**.
+Baixe o `PerformaWhisper.zip` na
+[página de releases](https://github.com/fepinheiro1/PerformaWhisper/releases/latest),
+descompacte (clique duplo) e arraste o **PerformaWhisper.app** para a pasta
+**Aplicativos**.
 
 ### 2. Libere o app no Gatekeeper
 

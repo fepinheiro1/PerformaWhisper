@@ -3,6 +3,12 @@
 Ditado por voz com IA para macOS — inspirado no [Wispr Flow](https://wisprflow.ai), mas com
 **transcrição 100% local e privada** (WhisperKit/CoreML rodando no chip do seu Mac).
 
+## Instalação
+
+Baixe o app pronto na [página de releases](https://github.com/fepinheiro1/PerformaWhisper/releases/latest)
+— binário universal, roda em Apple Silicon e em Macs Intel. O passo a passo está no
+[INSTALAR.md](INSTALAR.md). Para compilar do código, veja [Build](#build).
+
 ## Como funciona
 
 1. Segure a tecla de ditado (padrão: **⌃ Control + ⌥ Option**) em qualquer app.
