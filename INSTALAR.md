@@ -76,6 +76,12 @@ vícios de fala, listas, tom adaptado ao app) usa a API da OpenAI:
 Sem a chave, o app segue funcionando com uma limpeza básica (o Command Mode,
 porém, fica indisponível).
 
+> **Se algum dia der erro de modelo:** a OpenAI aposenta identificadores de modelo de
+> tempos em tempos. Em **Configurações → IA** dá para colar o id de um modelo atual
+> (a lista fica em <https://platform.openai.com/docs/models>); o botão "Padrão"
+> restaura o original. Isso não afeta a transcrição de voz, que é local e nunca
+> depende da OpenAI.
+
 ## Ajustes úteis
 
 - **Configurações → Geral**: trocar o atalho (Control+Option, Option direita, Fn…),

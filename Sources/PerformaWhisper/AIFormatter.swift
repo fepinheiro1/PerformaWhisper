@@ -98,7 +98,7 @@ enum AIFormatter {
         request.setValue("Bearer \(Preferences.shared.openAIKey)", forHTTPHeaderField: "Authorization")
 
         let body: [String: Any] = [
-            "model": "gpt-4o-mini",
+            "model": Preferences.shared.openAIModel,
             "temperature": 0.2,
             "messages": [
                 ["role": "system", "content": system],
@@ -108,10 +108,10 @@ enum AIFormatter {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-            let msg = String(data: data, encoding: .utf8) ?? "erro desconhecido"
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard status == 200 else {
             throw NSError(domain: "PerformaWhisper", code: 4,
-                          userInfo: [NSLocalizedDescriptionKey: "OpenAI: \(msg.prefix(200))"])
+                          userInfo: [NSLocalizedDescriptionKey: describeAPIError(status: status, data: data)])
         }
         struct Response: Decodable {
             struct Choice: Decodable {
@@ -126,6 +126,27 @@ enum AIFormatter {
                           userInfo: [NSLocalizedDescriptionKey: "Resposta vazia da OpenAI"])
         }
         return content.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// The pill has room for a sentence, not for a JSON dump. A retired model id
+    /// is the failure most likely to hit a user, so it gets a specific message.
+    private static func describeAPIError(status: Int, data: Data) -> String {
+        struct APIError: Decodable {
+            struct Payload: Decodable {
+                let message: String?
+                let code: String?
+            }
+            let error: Payload
+        }
+        let payload = (try? JSONDecoder().decode(APIError.self, from: data))?.error
+
+        if status == 404 || payload?.code == "model_not_found" {
+            return "O modelo \"\(Preferences.shared.openAIModel)\" não está disponível. Troque em Configurações → IA."
+        }
+        if status == 401 { return "Chave da OpenAI inválida. Confira em Configurações → IA." }
+        if status == 429 { return "Sem crédito ou limite atingido na OpenAI." }
+        if let message = payload?.message { return "OpenAI: \(message.prefix(180))" }
+        return "OpenAI: erro \(status)"
     }
 
     // MARK: - Rule-based fallback

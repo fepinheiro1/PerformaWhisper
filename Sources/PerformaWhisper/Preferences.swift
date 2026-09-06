@@ -99,6 +99,21 @@ final class Preferences {
         }
     }
 
+    /// Editable on purpose: OpenAI retires model ids, and a hardcoded one would
+    /// silently take Command Mode down with it.
+    static let defaultOpenAIModel = "gpt-4o-mini"
+
+    var openAIModel: String {
+        get {
+            let stored = d.string(forKey: "openAIModel") ?? ""
+            return stored.isEmpty ? Self.defaultOpenAIModel : stored
+        }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            d.set(trimmed, forKey: "openAIModel")
+        }
+    }
+
     var aiCleanupEnabled: Bool {
         get { d.object(forKey: "aiCleanupEnabled") as? Bool ?? true }
         set { d.set(newValue, forKey: "aiCleanupEnabled") }

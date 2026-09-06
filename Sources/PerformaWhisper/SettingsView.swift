@@ -98,6 +98,7 @@ private struct AITab: View {
     @State private var key = Preferences.shared.openAIKey
     @State private var enabled = Preferences.shared.aiCleanupEnabled
     @State private var tone = Preferences.shared.tone
+    @State private var model = Preferences.shared.openAIModel
 
     var body: some View {
         Form {
@@ -108,6 +109,21 @@ private struct AITab: View {
                 .onChange(of: key) { v in Preferences.shared.openAIKey = v }
 
             Text("Sem chave, o app usa uma limpeza básica por regras e o Command Mode fica indisponível. A transcrição de voz é sempre 100% local e offline.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                TextField("Modelo de texto:", text: $model)
+                    .onChange(of: model) { v in Preferences.shared.openAIModel = v }
+                Button("Padrão") {
+                    model = Preferences.defaultOpenAIModel
+                    Preferences.shared.openAIModel = model
+                }
+                .disabled(model == Preferences.defaultOpenAIModel)
+            }
+            .help("Modelo da OpenAI usado para limpar o texto e para o Command Mode. Não afeta a transcrição, que é local.")
+
+            Text("Se a OpenAI aposentar este modelo, cole aqui o id de um atual (a lista fica em platform.openai.com/docs/models). Isso não afeta a transcrição de voz.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
