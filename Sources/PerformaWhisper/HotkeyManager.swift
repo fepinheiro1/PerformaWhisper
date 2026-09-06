@@ -39,16 +39,19 @@ final class HotkeyManager {
     /// Whether `key` is currently pressed according to this flagsChanged event.
     /// Returns nil when the event is unrelated to `key` (single keys react only
     /// to their own key code; combos are re-evaluated on every flags change).
-    /// Modifiers we compare against, so caps lock and device-specific bits do not
-    /// count as part of a combo.
-    private static let trackedModifiers: CGEventFlags =
-        [.maskControl, .maskAlternate, .maskCommand, .maskShift, .maskSecondaryFn]
+    /// Modificadores que caracterizam outro atalho: se um deles estiver junto, o
+    /// combo não dispara. Fn e CapsLock ficam fora de propósito — teclados de
+    /// MacBook acendem o bit de Fn junto com outros modificadores, e exigir a
+    /// ausência dele fazia o combo nunca disparar.
+    private static let conflictingModifiers: CGEventFlags = [.maskCommand, .maskShift]
 
     private static func pressedState(for key: HoldKey, event: CGEvent) -> Bool? {
         if key.isCombo {
-            // Exact match: Control+Option must not fire when the user is pressing
-            // Control+Option+Command or any other system shortcut built on top of it.
-            return event.flags.intersection(trackedModifiers) == flagMask(for: key)
+            let mask = flagMask(for: key)
+            guard event.flags.intersection(mask) == mask else { return false }
+            // Não dispara em Ctrl+Opt+Cmd e afins, mas ignora bits irrelevantes.
+            let conflicts = conflictingModifiers.subtracting(mask)
+            return event.flags.intersection(conflicts).isEmpty
         }
         let keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
         guard keyCode == Self.keyCode(for: key) else { return nil }

@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let controller = DictationController()
     private var stateMenuItem: NSMenuItem!
     private var accessibilityMenuItem: NSMenuItem!
+    private var setupMenuItem: NSMenuItem!
 
     /// Applies the Dock-icon preference. `.regular` puts the app in the Dock and
     /// the app switcher; `.accessory` keeps it menu-bar only.
@@ -39,8 +40,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// macOS a invalida sozinho quando a assinatura do app muda. Reavalia toda vez
     /// que o menu abre, em vez de confiar no estado do lançamento.
     func menuWillOpen(_ menu: NSMenu) {
+        let setupDone = Preferences.shared.onboardingDone
+        setupMenuItem.isHidden = setupDone
+
+        // Só faz sentido cobrar acessibilidade depois que a configuração terminou;
+        // antes disso o aviso de configuração já cobre o caso.
         let trusted = AXIsProcessTrusted()
-        accessibilityMenuItem.isHidden = trusted
+        accessibilityMenuItem.isHidden = trusted || !setupDone
         if !trusted {
             accessibilityMenuItem.title = "⚠️ Acessibilidade desativada — o atalho não funciona"
         }
@@ -105,6 +111,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         accessibilityMenuItem.target = self
         accessibilityMenuItem.isHidden = true
         menu.addItem(accessibilityMenuItem)
+
+        // Fechar a janela de boas-vindas sem concluir deixava o app vivo e inerte,
+        // sem atalho e sem jeito de voltar. Este item é a saída.
+        setupMenuItem = NSMenuItem(title: "⚠️ Configuração não concluída — abrir",
+                                   action: #selector(resumeOnboarding),
+                                   keyEquivalent: "")
+        setupMenuItem.target = self
+        setupMenuItem.isHidden = true
+        menu.addItem(setupMenuItem)
         menu.addItem(.separator())
 
         let hint = NSMenuItem(title: "Segure \(Preferences.shared.holdKey.label.components(separatedBy: " (").first ?? "") para ditar",
@@ -185,7 +200,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    @objc private func resumeOnboarding() {
+        showOnboarding()
+    }
+
     private func showOnboarding() {
+        // Reabrir traria uma segunda janela e vazaria a primeira.
+        if let existing = onboardingWindow {
+            existing.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
         let view = OnboardingView(onDone: { [weak self] in
             Task { @MainActor in
                 Preferences.shared.onboardingDone = true
