@@ -7,14 +7,15 @@ localmente no seu Mac** (nada de áudio indo para a nuvem).
 ## Requisitos
 
 - macOS 13 (Ventura) ou mais novo
-- Funciona em Macs com chip Apple (M1/M2/M3/M4) **e** em Macs Intel — o app é
-  distribuído como binário universal, então é o mesmo arquivo para os dois
+- **Mac com chip Apple (M1 ou mais novo).** Macs Intel não são suportados
 - Internet só na primeira execução (para baixar o modelo de voz) e,
   opcionalmente, para a formatação com IA
 
-> **Mac Intel?** Funciona, mas a transcrição é mais lenta (o chip não tem o motor
-> neural dos Macs M). Dica: em **Configurações → Geral → Modelo de voz**, escolha
-> **Base** ou **Tiny** — ficam bem mais rápidos e ainda têm boa qualidade.
+> **Mac Intel?** O app **não funciona** nesses Macs por enquanto. Ele abre e capta o
+> microfone, mas a transcrição morre por um bug do CoreML da Apple em hardware Intel,
+> dentro de um componente que não dá para corrigir pelo aplicativo. O
+> [README](https://github.com/fepinheiro1/PerformaWhisper#macs-intel) tem o diagnóstico
+> completo. Alternativa nesses Macs: o Ditado nativo do macOS.
 
 ## Duas formas de instalar
 
@@ -122,8 +123,9 @@ porém, fica indisponível).
 
 Só para quem quer mexer no código. Para usar o app, a instalação rápida acima basta.
 
-**Pré-requisitos:** as Command Line Tools do Xcode com Swift 5.9 ou mais novo. No
-Ventura isso quer dizer Xcode 15 (`xcode-select --install` instala as ferramentas).
+**Pré-requisitos:** macOS 14 ou mais novo com Xcode 16 (Swift 6). O app roda a partir
+do macOS 13, mas *compilar* exige Swift 6, porque uma das dependências transitivas
+(`swift-jinja`) declara `swift-tools-version: 6.0`.
 
 ```sh
 git clone https://github.com/fepinheiro1/PerformaWhisper.git
@@ -133,11 +135,10 @@ cp -r build/PerformaWhisper.app /Applications/
 ```
 
 O `make-app.sh` compila as duas arquiteturas, une num binário universal, gera o ícone
-e assina o app. Se uma das arquiteturas falhar, ele avisa e segue com a outra — o app
-resultante só abre em Macs equivalentes.
+e assina o app. A fatia Intel é gerada mas não transcreve, pelo motivo descrito acima.
 
 A primeira compilação baixa as dependências (WhisperKit e companhia) e leva alguns
-minutos; num Mac Intel mais antigo, bastante mais. As seguintes são rápidas.
+minutos. As seguintes são rápidas.
 
 Compilado localmente, o app não passa pelo Gatekeeper, então o `xattr -cr` do passo 2
 não é necessário. As permissões de Microfone e Acessibilidade continuam valendo.
