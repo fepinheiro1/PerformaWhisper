@@ -142,6 +142,12 @@ final class Preferences {
         set { d.set(newValue, forKey: "showDockIcon") }
     }
 
+    /// O aviso sobre o motor alternativo em Macs Intel aparece uma vez só.
+    var intelNoticeShown: Bool {
+        get { d.bool(forKey: "intelNoticeShown") }
+        set { d.set(newValue, forKey: "intelNoticeShown") }
+    }
+
     var onboardingDone: Bool {
         get { d.bool(forKey: "onboardingDone") }
         set { d.set(newValue, forKey: "onboardingDone") }

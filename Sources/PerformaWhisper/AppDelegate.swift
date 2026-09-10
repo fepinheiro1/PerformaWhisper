@@ -19,38 +19,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.setActivationPolicy(Preferences.shared.showDockIcon ? .regular : .accessory)
     }
 
-    /// Em x86_64 a transcrição não funciona: o WhisperKit estoura um buffer float16
-    /// (FloatType é Float de 4 bytes nessa arquitetura) e, passado isso, a inferência
-    /// do MelSpectrogram bate numa divisão por zero dentro do CoreML da Apple.
-    /// Avisar de cara é melhor do que pedir permissões e morrer em silêncio depois.
+    /// Em x86_64 o app usa o whisper.cpp em vez do WhisperKit, porque este último
+    /// trava no CoreML em hardware Intel. O caminho novo foi verificado sob Rosetta,
+    /// mas ainda não em um Mac Intel de verdade — daí o aviso, mostrado uma vez só.
     private func warnIfUnsupportedArchitecture() {
         #if arch(x86_64)
+        guard !Preferences.shared.intelNoticeShown else { return }
+        Preferences.shared.intelNoticeShown = true
+
         let alert = NSAlert()
-        alert.alertStyle = .critical
-        alert.messageText = "Este Mac não é compatível"
+        alert.alertStyle = .informational
+        alert.messageText = "Suporte a Macs Intel em teste"
         alert.informativeText = """
-        O PerformaWhisper precisa de um Mac com chip Apple (M1 ou mais novo).
+        Neste Mac o PerformaWhisper usa um motor de transcrição diferente (whisper.cpp), \
+        porque o motor usado nos Macs com chip Apple trava no hardware Intel.
 
-        Em Macs Intel o aplicativo abre, mas a transcrição falha por um bug do CoreML \
-        da Apple neste hardware: o processo é encerrado ao tentar transcrever.
+        O caminho funciona, mas ainda não foi validado num Mac Intel real. Se algo falhar, \
+        o relato ajuda a corrigir.
 
-        Nesses Macs, o Ditado nativo do macOS é a alternativa.
+        A transcrição roda na CPU e é mais lenta: em Configurações → Geral, prefira o \
+        modelo Base ou Tiny.
         """
-        alert.addButton(withTitle: "Sair")
-        alert.addButton(withTitle: "Ver detalhes")
-        alert.addButton(withTitle: "Continuar mesmo assim")
+        alert.addButton(withTitle: "Entendi")
+        alert.addButton(withTitle: "Relatar um problema")
 
         NSApp.activate(ignoringOtherApps: true)
-        switch alert.runModal() {
-        case .alertFirstButtonReturn:
-            NSApp.terminate(nil)
-        case .alertSecondButtonReturn:
-            if let url = URL(string: "https://github.com/fepinheiro1/PerformaWhisper#macs-intel") {
-                NSWorkspace.shared.open(url)
-            }
-            NSApp.terminate(nil)
-        default:
-            break // segue por conta e risco
+        if alert.runModal() == .alertSecondButtonReturn,
+           let url = URL(string: "https://github.com/fepinheiro1/PerformaWhisper/issues") {
+            NSWorkspace.shared.open(url)
         }
         #endif
     }

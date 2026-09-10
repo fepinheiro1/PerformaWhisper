@@ -1,3 +1,4 @@
+#if arch(arm64)
 import Foundation
 import WhisperKit
 
@@ -6,13 +7,8 @@ import WhisperKit
 /// The model is loaded on a background task while `isReady` is read from the
 /// main actor, so the mutable state is guarded by a lock.
 final class Transcriber {
-    enum State: Equatable {
-        case idle
-        case downloading(Double)   // 0...1
-        case loading
-        case ready
-        case failed(String)
-    }
+    typealias State = TranscriberState
+    static let engineName = "WhisperKit (CoreML)"
 
     var onStateChange: ((State) -> Void)?
 
@@ -51,7 +47,7 @@ final class Transcriber {
         }
         guard shouldStart else { return }
 
-        let model = Preferences.shared.modelName
+        let model = VoiceModel.resolved(Preferences.shared.modelName)
         withLock { _lastProgressPercent = -1 }
         setState(.downloading(0))
 
@@ -147,16 +143,11 @@ final class Transcriber {
         )
         let results = try await kit.transcribe(audioArray: audio, decodeOptions: options)
         let text = results.map(\.text).joined(separator: " ")
-        return Self.cleanWhisperArtifacts(text)
+        return WhisperText.cleanArtifacts(text)
     }
 
-    /// Removes Whisper artifacts like special tokens and hallucinated tags.
     static func cleanWhisperArtifacts(_ text: String) -> String {
-        var t = text
-        // Remove <|...|> tokens and [MUSIC]/(applause)-style annotations.
-        t = t.replacingOccurrences(of: #"<\|[^|]*\|>"#, with: "", options: .regularExpression)
-        t = t.replacingOccurrences(of: #"\[[^\]]{0,40}\]"#, with: "", options: .regularExpression)
-        t = t.replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
-        return t.trimmingCharacters(in: .whitespacesAndNewlines)
+        WhisperText.cleanArtifacts(text)
     }
 }
+#endif

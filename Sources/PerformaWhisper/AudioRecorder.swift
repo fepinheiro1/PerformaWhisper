@@ -16,6 +16,44 @@ final class AudioRecorder {
 
     static let targetSampleRate: Double = 16000
 
+    /// Lê um arquivo de áudio e devolve amostras 16 kHz mono, o formato que os
+    /// motores de transcrição esperam. Usado pelo modo `--test-transcribe`.
+    static func loadSamples(fromFile path: String) throws -> [Float] {
+        let file = try AVAudioFile(forReading: URL(fileURLWithPath: path))
+        guard let target = AVAudioFormat(commonFormat: .pcmFormatFloat32,
+                                         sampleRate: targetSampleRate,
+                                         channels: 1,
+                                         interleaved: false),
+              let converter = AVAudioConverter(from: file.processingFormat, to: target) else {
+            throw NSError(domain: "PerformaWhisper", code: 6,
+                          userInfo: [NSLocalizedDescriptionKey: "Formato de áudio não suportado"])
+        }
+
+        let ratio = targetSampleRate / file.processingFormat.sampleRate
+        let capacity = AVAudioFrameCount(Double(file.length) * ratio) + 4096
+        guard let out = AVAudioPCMBuffer(pcmFormat: target, frameCapacity: capacity) else {
+            throw NSError(domain: "PerformaWhisper", code: 7,
+                          userInfo: [NSLocalizedDescriptionKey: "Falha ao alocar buffer"])
+        }
+
+        var done = false
+        var error: NSError?
+        converter.convert(to: out, error: &error) { _, status in
+            if done { status.pointee = .endOfStream; return nil }
+            guard let input = AVAudioPCMBuffer(pcmFormat: file.processingFormat,
+                                               frameCapacity: AVAudioFrameCount(file.length)) else {
+                status.pointee = .endOfStream; return nil
+            }
+            do { try file.read(into: input) } catch { status.pointee = .endOfStream; return nil }
+            done = true
+            status.pointee = .haveData
+            return input
+        }
+        if let error { throw error }
+        guard let channel = out.floatChannelData else { return [] }
+        return Array(UnsafeBufferPointer(start: channel[0], count: Int(out.frameLength)))
+    }
+
     func start() throws {
         guard !isRecording else { return }
         lock.lock()

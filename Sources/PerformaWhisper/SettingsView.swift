@@ -32,14 +32,7 @@ private struct GeneralTab: View {
     @State private var saveHistory = Preferences.shared.saveHistory
     @State private var showDockIcon = Preferences.shared.showDockIcon
 
-    private let models: [(String, String)] = [
-        ("tiny", "Tiny — mais rápido, menos preciso (~75 MB)"),
-        ("base", "Base — rápido (~140 MB)"),
-        ("small", "Small — equilíbrio recomendado (~460 MB)"),
-        ("medium", "Medium — mais preciso, mais lento (~1,5 GB)"),
-        ("large-v3_turbo", "Large v3 Turbo — máxima precisão (~1,6 GB)")
-    ]
-
+    private let models = VoiceModel.all
     private let languages: [(String, String)] = [
         ("auto", "Detectar automaticamente"),
         ("pt", "Português"), ("en", "Inglês"), ("es", "Espanhol"),
@@ -67,7 +60,7 @@ private struct GeneralTab: View {
             Divider()
 
             Picker("Modelo de voz:", selection: $model) {
-                ForEach(models, id: \.0) { Text($0.1).tag($0.0) }
+                ForEach(models, id: \.id) { Text($0.label).tag($0.id) }
             }
             .onChange(of: model) { v in
                 Preferences.shared.modelName = v
