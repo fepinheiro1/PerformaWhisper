@@ -19,7 +19,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.setActivationPolicy(Preferences.shared.showDockIcon ? .regular : .accessory)
     }
 
+    /// Em x86_64 a transcrição não funciona: o WhisperKit estoura um buffer float16
+    /// (FloatType é Float de 4 bytes nessa arquitetura) e, passado isso, a inferência
+    /// do MelSpectrogram bate numa divisão por zero dentro do CoreML da Apple.
+    /// Avisar de cara é melhor do que pedir permissões e morrer em silêncio depois.
+    private func warnIfUnsupportedArchitecture() {
+        #if arch(x86_64)
+        let alert = NSAlert()
+        alert.alertStyle = .critical
+        alert.messageText = "Este Mac não é compatível"
+        alert.informativeText = """
+        O PerformaWhisper precisa de um Mac com chip Apple (M1 ou mais novo).
+
+        Em Macs Intel o aplicativo abre, mas a transcrição falha por um bug do CoreML \
+        da Apple neste hardware: o processo é encerrado ao tentar transcrever.
+
+        Nesses Macs, o Ditado nativo do macOS é a alternativa.
+        """
+        alert.addButton(withTitle: "Sair")
+        alert.addButton(withTitle: "Ver detalhes")
+        alert.addButton(withTitle: "Continuar mesmo assim")
+
+        NSApp.activate(ignoringOtherApps: true)
+        switch alert.runModal() {
+        case .alertFirstButtonReturn:
+            NSApp.terminate(nil)
+        case .alertSecondButtonReturn:
+            if let url = URL(string: "https://github.com/fepinheiro1/PerformaWhisper#macs-intel") {
+                NSWorkspace.shared.open(url)
+            }
+            NSApp.terminate(nil)
+        default:
+            break // segue por conta e risco
+        }
+        #endif
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        warnIfUnsupportedArchitecture()
         setupMainMenu()
         setupStatusItem()
 
