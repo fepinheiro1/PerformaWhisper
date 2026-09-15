@@ -9,6 +9,35 @@ final class AudioRecorder {
     private var samples: [Float] = []
     private let lock = NSLock()
     private(set) var isRecording = false
+    private var tapInstalled = false
+    private var configObserver: NSObjectProtocol?
+
+    init() {
+        // Trocar de dispositivo de entrada (AirPods conectando, mic externo) para
+        // o motor e invalida o grafo. Sem tratar, o próximo start() tentaria
+        // reaproveitar um estado que o sistema já descartou.
+        configObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: engine,
+            queue: .main
+        ) { [weak self] _ in
+            self?.tearDown()
+        }
+    }
+
+    deinit {
+        if let configObserver { NotificationCenter.default.removeObserver(configObserver) }
+    }
+
+    /// Volta o gravador para o estado limpo, seja qual for o ponto em que parou.
+    private func tearDown() {
+        if tapInstalled {
+            engine.inputNode.removeTap(onBus: 0)
+            tapInstalled = false
+        }
+        if engine.isRunning { engine.stop() }
+        isRecording = false
+    }
 
     /// Called on an internal thread with the current input level (0...1),
     /// for the floating pill waveform.
@@ -60,9 +89,14 @@ final class AudioRecorder {
         samples.removeAll()
         lock.unlock()
 
+        // Um start() anterior pode ter falhado depois de instalar o tap. Instalar
+        // um segundo tap no mesmo bus lança NSException, que o Swift não captura —
+        // era a causa do app fechar sozinho. Começa sempre do zero.
+        tearDown()
+
         let input = engine.inputNode
         let inputFormat = input.outputFormat(forBus: 0)
-        guard inputFormat.sampleRate > 0 else {
+        guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
             throw NSError(domain: "PerformaWhisper", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "Microfone indisponível"])
         }
@@ -76,18 +110,23 @@ final class AudioRecorder {
         input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, _ in
             self?.process(buffer: buffer, targetFormat: targetFormat)
         }
+        tapInstalled = true
 
         engine.prepare()
-        try engine.start()
+        do {
+            try engine.start()
+        } catch {
+            // Sem isso o tap ficava órfão e o próximo start() derrubava o app.
+            tearDown()
+            throw error
+        }
         isRecording = true
     }
 
     /// Stops recording and returns the captured samples.
     func stop() -> [Float] {
         guard isRecording else { return [] }
-        engine.inputNode.removeTap(onBus: 0)
-        engine.stop()
-        isRecording = false
+        tearDown()
         lock.lock()
         defer { lock.unlock() }
         let result = samples

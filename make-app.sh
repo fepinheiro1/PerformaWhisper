@@ -3,18 +3,37 @@
 set -e
 cd "$(dirname "$0")"
 
+# SDK: a partir do macOS 27 SDK, propriedades do SwiftUI como @State viraram
+# macros implementadas num plugin (SwiftUIMacros) que só vem com o Xcode.app —
+# as Command Line Tools não o incluem, e o build falha com "plugin for module
+# 'SwiftUIMacros' not found". Enquanto um SDK 26.x estiver instalado, usa ele.
+if [ -z "$SDKROOT" ]; then
+    SDK26=$(ls -d /Library/Developer/CommandLineTools/SDKs/MacOSX26.[0-9]*.sdk 2>/dev/null | sort -V | tail -1)
+    if [ -n "$SDK26" ]; then
+        export SDKROOT="$SDK26"
+        echo "→ SDK: $(basename "$SDKROOT")"
+    fi
+fi
+
 # Binário universal: um .app só que roda em Apple Silicon e em Macs Intel.
 # Cada arquitetura é compilada em separado com --triple e depois unida com lipo,
 # porque `swift build --arch a --arch b` exige o Xcode completo, e aqui as
 # Command Line Tools bastam.
 DEPLOY_TARGET="13.0"
-ARM_BIN=".build/arm64-apple-macosx/release/PerformaWhisper"
-X86_BIN=".build/x86_64-apple-macosx/release/PerformaWhisper"
 BUILT_ARCHS=()
+
+# Cada arquitetura compila no próprio scratch path. Sem isso, o sistema de build
+# novo do SwiftPM (Swift 6.4+) grava tudo em .build/out/Products/Release e o
+# segundo build sobrescreve o primeiro — sobrava um binário de uma arquitetura só.
+# Localiza o executável em qualquer um dos dois layouts (antigo e novo).
+find_binary() {
+    find ".build/$1" -type f -name PerformaWhisper -not -path "*.dSYM*" -path "*elease*" 2>/dev/null | head -1
+}
 
 for arch in arm64 x86_64; do
     echo "→ Compilando release para $arch…"
-    if swift build -c release --triple "${arch}-apple-macosx${DEPLOY_TARGET}"; then
+    if swift build -c release --triple "${arch}-apple-macosx${DEPLOY_TARGET}" --scratch-path ".build/$arch" \
+       && [ -n "$(find_binary "$arch")" ]; then
         BUILT_ARCHS+=("$arch")
     else
         echo "  ⚠️  Falhou para $arch — seguindo sem essa arquitetura."
@@ -31,19 +50,17 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 if [ ${#BUILT_ARCHS[@]} -eq 2 ]; then
-    lipo -create "$ARM_BIN" "$X86_BIN" -output "$APP/Contents/MacOS/PerformaWhisper"
+    lipo -create "$(find_binary arm64)" "$(find_binary x86_64)" -output "$APP/Contents/MacOS/PerformaWhisper"
     echo "→ Binário universal: $(lipo -archs "$APP/Contents/MacOS/PerformaWhisper")"
 else
-    # Só uma arquitetura compilou: o .app roda apenas em Macs equivalentes.
     only="${BUILT_ARCHS[1]}"
-    [ "$only" = "arm64" ] && cp "$ARM_BIN" "$APP/Contents/MacOS/PerformaWhisper" \
-                          || cp "$X86_BIN" "$APP/Contents/MacOS/PerformaWhisper"
+    cp "$(find_binary "$only")" "$APP/Contents/MacOS/PerformaWhisper"
     echo "  ⚠️  App gerado só para $only — não vai abrir em Macs de outra arquitetura."
 fi
 
 # Os bundles de recurso são iguais nas duas arquiteturas; usa os da primeira que
 # compilou.
-RES_DIR=".build/${BUILT_ARCHS[1]}-apple-macosx/release"
+RES_DIR="$(dirname "$(find_binary "${BUILT_ARCHS[1]}")")"
 
 # Wordmark shown in the onboarding window, loaded via Bundle.main.
 cp Assets/logo-light.png Assets/logo-dark.png "$APP/Contents/Resources/"
